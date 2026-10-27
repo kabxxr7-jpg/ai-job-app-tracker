@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { StatusSelect } from "@/components/status-select";
 import { STATUS_LABELS } from "@/components/status-badge";
-import { changeStatus, submitNote } from "./actions";
+import { AnalyzePosting } from "@/components/analyze-posting";
+import { changeStatus, submitNote, analyzePosting } from "./actions";
 
 export default async function ApplicationDetailPage({
   params,
@@ -61,6 +62,27 @@ export default async function ApplicationDetailPage({
             {application.tags.length > 0 ? (
               <p className="text-sm text-muted-foreground">Tags: {application.tags.join(", ")}</p>
             ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">AI Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AnalyzePosting
+              applicationId={application.id}
+              initialJobPostingText={application.jobPostingText ?? ""}
+              initialAnalysis={{
+                fitScore: application.fitScore,
+                fitRationale: application.fitRationale,
+                outreachDraft: application.outreachDraft,
+                seniority: application.seniority,
+                location: application.location,
+                tags: application.tags,
+              }}
+              onAnalyze={analyzePosting}
+            />
           </CardContent>
         </Card>
 
