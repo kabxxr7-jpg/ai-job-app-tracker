@@ -1,15 +1,28 @@
 import Link from "next/link";
+import type { ApplicationStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
+import { KanbanBoard } from "@/components/kanban-board";
+import { updateApplicationStatus } from "./actions";
 
 export default async function ApplicationsPage() {
   const applications = await prisma.application.findMany({
     include: { company: true },
     orderBy: { updatedAt: "desc" },
   });
+
+  const kanbanApplications = applications.map((app) => ({
+    id: app.id,
+    roleTitle: app.roleTitle,
+    companyName: app.company.name,
+    status: app.status,
+    fitScore: app.fitScore,
+  }));
+
+  async function onStatusChange(applicationId: string, status: ApplicationStatus) {
+    "use server";
+    await updateApplicationStatus(applicationId, status);
+  }
 
   return (
     <div className="space-y-6">
@@ -21,54 +34,15 @@ export default async function ApplicationsPage() {
       </div>
 
       {applications.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            No applications yet.{" "}
-            <Link href="/applications/new" className="underline">
-              Add your first one
-            </Link>
-            .
-          </CardContent>
-        </Card>
+        <p className="py-12 text-center text-muted-foreground">
+          No applications yet.{" "}
+          <Link href="/applications/new" className="underline">
+            Add your first one
+          </Link>
+          .
+        </p>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Fit score</TableHead>
-                  <TableHead>Updated</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {applications.map((app) => (
-                  <TableRow key={app.id} className="cursor-pointer">
-                    <TableCell>
-                      <Link href={`/applications/${app.id}`} className="block font-medium hover:underline">
-                        {app.company.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/applications/${app.id}`} className="block">
-                        {app.roleTitle}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={app.status} />
-                    </TableCell>
-                    <TableCell>{app.fitScore != null ? `${app.fitScore}/100` : "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {app.updatedAt.toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <KanbanBoard applications={kanbanApplications} onStatusChange={onStatusChange} />
       )}
     </div>
   );
