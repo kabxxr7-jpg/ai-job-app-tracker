@@ -1,10 +1,22 @@
 # AI Job Application Tracker
 
-A job application tracker built as a portfolio piece — not just another CRUD app, but one with two
-deliberately deep features instead of many shallow ones: real LLM-engineering (structured output,
-schema validation, typed error handling) and real integration-engineering (signed webhooks with
-delivery logging and backoff retries). Everything else — the kanban board, dashboard stats, notes,
-timeline — exists to make those two features feel like part of a real product, not a demo script.
+**Live demo: [ADD_DEPLOYED_URL_HERE](#)** — password shown right on the login screen, no need to ask.
+
+A job application tracker with two things that actually matter for client work, built deep instead
+of wide:
+
+- **AI that does something real** — paste a job posting, Claude reads it against your resume and
+  returns a fit score, a rationale, and a drafted outreach note, using structured output validated
+  server-side (not a prompt-and-hope wrapper).
+- **Integrations that actually fire** — status changes trigger signed, logged, automatically-retried
+  webhooks to Slack/Discord/Zapier/your own endpoint. Every delivery attempt is recorded; failed
+  ones retry on a backoff schedule until they succeed or give up.
+
+Everything else — the kanban board, dashboard stats, notes, timeline — exists to make those two
+features feel like part of a real product instead of a script with a UI slapped on.
+
+*Full technical writeup below, including the HMAC signing scheme and how the retry sweep was
+verified end-to-end. Skip ahead if you just want to see it work.*
 
 ## Architecture
 

@@ -32,6 +32,14 @@ function LoginForm() {
           <CardDescription>Single-user app. Enter the access password.</CardDescription>
         </CardHeader>
         <CardContent>
+          {process.env.NEXT_PUBLIC_DEMO_HINT ? (
+            <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950">
+              This is a live portfolio demo. Password:{" "}
+              <code className="rounded bg-background px-1.5 py-0.5 font-mono">
+                {process.env.NEXT_PUBLIC_DEMO_HINT}
+              </code>
+            </div>
+          ) : null}
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="from" value={from} />
             <div className="space-y-2">
