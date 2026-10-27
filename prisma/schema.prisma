@@ -1,0 +1,119 @@
+// Prisma schema for the AI Job Application Tracker.
+// See README.md for the full architecture writeup.
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ApplicationStatus {
+  WISHLIST
+  APPLIED
+  SCREEN
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+model Company {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  website      String?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  applications Application[]
+}
+
+model Application {
+  id             String            @id @default(cuid())
+  companyId      String
+  company        Company           @relation(fields: [companyId], references: [id])
+  roleTitle      String
+  jobPostingUrl  String?
+  jobPostingText String? // raw JD text pasted by user, kept for re-analysis
+  status         ApplicationStatus @default(WISHLIST)
+  seniority      String? // AI-extracted or user-edited
+  location       String?
+  tags           String[]          @default([]) // AI-extracted requirement tags
+  fitScore       Int? // 0-100, from AI analysis
+  fitRationale   String?
+  outreachDraft  String? // AI-generated outreach note
+  appliedAt      DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  statusEvents StatusEvent[]
+  notes        Note[]
+  deliveries   WebhookDelivery[]
+
+  @@index([status])
+  @@index([companyId])
+}
+
+model StatusEvent {
+  id            String             @id @default(cuid())
+  applicationId String
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  note          String?
+  createdAt     DateTime           @default(now())
+
+  @@index([applicationId])
+}
+
+model Note {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  body          String
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
+}
+
+// Single-user profile: no multi-tenancy, this app has exactly one row.
+model Profile {
+  id         String   @id @default(cuid())
+  resumeText String   @default("")
+  skills     String[] @default([])
+  updatedAt  DateTime @updatedAt
+}
+
+model WebhookConfig {
+  id         String              @id @default(cuid())
+  targetUrl  String
+  secret     String // HMAC key; stored plainly, acceptable for single-user MVP scope (see README)
+  triggerOn  ApplicationStatus[] @default([INTERVIEW, OFFER, REJECTED])
+  isActive   Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+  deliveries WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id              String        @id @default(cuid())
+  webhookConfigId String
+  webhookConfig   WebhookConfig @relation(fields: [webhookConfigId], references: [id])
+  applicationId   String?
+  application     Application?  @relation(fields: [applicationId], references: [id])
+  eventType       String // e.g. "application.status_changed"
+  payload         Json
+  attemptNumber   Int           @default(1)
+  statusCode      Int?
+  responseBody    String? // truncated to ~2000 chars
+  success         Boolean       @default(false)
+  errorMessage    String?
+  durationMs      Int?
+  nextRetryAt     DateTime? // set when a retry is pending; cron sweep picks these up
+  createdAt       DateTime      @default(now())
+
+  @@index([webhookConfigId])
+  @@index([applicationId])
+  @@index([nextRetryAt])
+}
