@@ -25,10 +25,13 @@ function LoginForm() {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_var(--accent)_0%,_var(--muted)_45%,_var(--background)_80%)] px-4">
+      <Card className="w-full max-w-sm shadow-lg">
         <CardHeader>
-          <CardTitle>AI Job Application Tracker</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <span className="size-2.5 rounded-full bg-primary" aria-hidden />
+            AI Job Application Tracker
+          </CardTitle>
           <CardDescription>Single-user app. Enter the access password.</CardDescription>
         </CardHeader>
         <CardContent>

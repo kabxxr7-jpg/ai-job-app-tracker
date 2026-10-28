@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { logout } from "@/app/logout/actions";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -10,17 +14,32 @@ const LINKS = [
 ];
 
 export function Nav() {
+  const pathname = usePathname();
+
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-y-2 px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <span className="font-semibold">Job Tracker</span>
+          <span className="flex items-center gap-1.5 font-semibold">
+            <span className="size-2 rounded-full bg-primary" aria-hidden />
+            Job Tracker
+          </span>
           <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            {LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="hover:text-foreground">
-                {link.label}
-              </Link>
-            ))}
+            {LINKS.map((link) => {
+              const isActive = pathname === link.href || pathname?.startsWith(`${link.href}/`);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "transition-colors hover:text-foreground",
+                    isActive && "font-medium text-primary"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
         <form action={logout}>
