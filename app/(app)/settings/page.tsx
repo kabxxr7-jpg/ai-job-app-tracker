@@ -32,7 +32,7 @@ export default async function SettingsPage() {
               <CardTitle className="text-base">Resume &amp; skills</CardTitle>
               <CardDescription>
                 Used to ground the AI fit-score and outreach-draft generation on the application detail
-                page. Nothing here is sent anywhere except to Claude when you run an analysis.
+                page. Nothing here is sent anywhere except to Gemini when you run an analysis.
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -12,8 +12,8 @@ export const env = {
   get DATABASE_URL() {
     return required("DATABASE_URL");
   },
-  get ANTHROPIC_API_KEY() {
-    return required("ANTHROPIC_API_KEY");
+  get GEMINI_API_KEY() {
+    return required("GEMINI_API_KEY");
   },
   get APP_PASSWORD() {
     return required("APP_PASSWORD");

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import type { JDAnalysis } from "@/lib/anthropic";
+import type { JDAnalysis } from "@/lib/ai";
 
 export interface AnalyzePostingProps {
   applicationId: string;

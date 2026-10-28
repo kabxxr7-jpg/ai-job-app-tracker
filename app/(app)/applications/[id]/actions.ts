@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ApplicationStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getOrCreateProfile } from "@/lib/profile";
-import { analyzeJobPosting, type JDAnalysis } from "@/lib/anthropic";
+import { analyzeJobPosting, type JDAnalysis } from "@/lib/ai";
 import { updateApplicationStatus as updateApplicationStatusShared, addNote as addNoteShared } from "@/app/(app)/applications/actions";
 
 export async function changeStatus(applicationId: string, toStatus: ApplicationStatus) {

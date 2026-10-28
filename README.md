@@ -5,7 +5,7 @@
 A job application tracker with two things that actually matter for client work, built deep instead
 of wide:
 
-- **AI that does something real** — paste a job posting, Claude reads it against your resume and
+- **AI that does something real** — paste a job posting, Gemini reads it against your resume and
   returns a fit score, a rationale, and a drafted outreach note, using structured output validated
   server-side (not a prompt-and-hope wrapper).
 - **Integrations that actually fire** — status changes trigger signed, logged, automatically-retried
@@ -26,8 +26,8 @@ Next.js App Router (Server Actions + Route Handlers)
         |-- Postgres (Prisma) ---- companies, applications, status history, notes,
         |                          resume profile, webhook configs + delivery log
         |
-        |-- Anthropic API -------- structured JD extraction + fit scoring
-        |                          (messages.parse + zodOutputFormat)
+        |-- Gemini API ----------- structured JD extraction + fit scoring
+        |                          (responseJsonSchema + Zod validation)
         |
         '-- Outgoing webhooks ---- signed POSTs to Slack/Discord/Zapier/Make/
                                     your own endpoint, on status change
@@ -49,7 +49,7 @@ colocated with their page (`actions.ts` files) — the only real API routes are 
   it with `jose`. A real multi-tenant version would swap this for Clerk/NextAuth without touching
   the data layer — nothing is `userId`-scoped because there's only one user.
 - **Server Actions over API routes** for every form/mutation — idiomatic App Router, keeps the
-  Anthropic API key and webhook secrets server-side with zero extra plumbing.
+  Gemini API key and webhook secrets server-side with zero extra plumbing.
 - **shadcn/ui on Base UI** (not Radix) with Tailwind v4, hand-rolled kanban via `@dnd-kit/core`
   rather than a kanban library.
 - **Postgres via Supabase** in production (pooled `DATABASE_URL` for the app, direct `DIRECT_URL`
@@ -57,24 +57,26 @@ colocated with their page (`actions.ts` files) — the only real API routes are 
 
 ## The AI feature: JD extraction + fit scoring
 
-On an application's detail page, paste a job description and Claude returns, in one call:
+On an application's detail page, paste a job description and Gemini returns, in one call:
 extracted fields (seniority, location, requirement tags), a 0–100 fit score against your stored
 resume/skills, a one-paragraph rationale, and a tailored outreach-note draft.
 
-This uses the Anthropic SDK's `messages.parse()` with `zodOutputFormat()`
-(`lib/anthropic.ts`) — not a prompt that says "respond in JSON" and a regex to scrape the reply.
-The SDK sends your Zod schema as a `json_schema` output format *and* validates Claude's response
-against it before your code ever sees `parsed_output`. That's defense-in-depth that's easy to skip:
-a schema-constrained response can still fail validation (wrong type, missing field), and the SDK's
-`zodOutputFormat` throws a typed `AnthropicError` in that case rather than handing you a
-plausible-looking object that quietly breaks downstream code.
+This uses Gemini's structured-output mode (`responseMimeType: "application/json"` +
+`responseJsonSchema`, see `lib/ai.ts`) — not a prompt that says "respond in JSON" and a regex to
+scrape the reply. The JSON Schema sent to Gemini is derived from a Zod schema (`z.toJSONSchema`),
+and the response is parsed and validated against that *same* Zod schema before any of it reaches
+the database. That's defense-in-depth that's easy to skip: a schema-constrained response can still
+come back malformed or fail validation (wrong type, missing field), so it's never trusted blindly
+just because the provider promised structured output — `jdAnalysisSchema.safeParse()` is the real
+gate, not the API call.
 
 Errors are categorized into a `JDAnalysisError` (`not_configured` / `rate_limit` / `api_error` /
 `invalid_output` / `unknown`) so the UI shows a clean, specific message instead of a stack trace —
-"Claude is rate-limited, try again shortly" reads very differently from "this has been logged,"
-and a user shouldn't have to guess which one they're looking at. The Anthropic client is
-constructed lazily (not at module load) so the app builds and runs fine without
-`ANTHROPIC_API_KEY` set; only the analyze action needs it.
+"Gemini is rate-limited, try again shortly" reads very differently from "this has been logged," and
+a user shouldn't have to guess which one they're looking at. The Gemini client is constructed
+lazily (not at module load) so the app builds and runs fine without `GEMINI_API_KEY` set; only the
+analyze action needs it. Gemini's free tier (no card required) is what this project runs on —
+swapping in a paid tier, or a different provider entirely, only touches `lib/ai.ts`.
 
 Streaming was considered and skipped: this is a single-shot structured extraction, not a
 conversational reply, so there's nothing to stream — using it anyway would be reaching for a tool
@@ -126,7 +128,7 @@ the logic.
 ## Setup
 
 ```bash
-cp .env.example .env   # fill in DATABASE_URL, DIRECT_URL, ANTHROPIC_API_KEY, APP_PASSWORD, SESSION_SECRET
+cp .env.example .env   # fill in DATABASE_URL, DIRECT_URL, GEMINI_API_KEY, APP_PASSWORD, SESSION_SECRET
 npm install
 npx prisma migrate dev
 npm run db:seed
