@@ -1,6 +1,6 @@
 # AI Job Application Tracker
 
-**Live demo: [ADD_DEPLOYED_URL_HERE](#)** — password shown right on the login screen, no need to ask.
+**Live demo: [ai-job-app-tracker.vercel.app](https://ai-job-app-tracker.vercel.app)** — password shown right on the login screen, no need to ask.
 
 A job application tracker with two things that actually matter for client work, built deep instead
 of wide:
