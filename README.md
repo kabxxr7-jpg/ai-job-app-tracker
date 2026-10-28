@@ -149,9 +149,10 @@ missing, rather than a scattering of unchecked `process.env.X` calls.
    sweep.
 3. `npx prisma migrate deploy` against the production database, then `npm run db:seed` if you want
    non-empty demo data.
-4. Deploy. `vercel.json`'s cron schedule picks up automatically. Note: Vercel's Hobby tier may
-   restrict cron frequency more than the `*/5 * * * *` default here — check your plan's limits and
-   adjust the schedule if needed.
+4. Deploy. `vercel.json`'s cron schedule picks up automatically. It runs once daily
+   (`0 3 * * *`) because Vercel's Hobby tier rejects any cron expression that would fire more than
+   once per day — confirmed by an actual deploy rejection, not a guess. On a paid plan you can
+   tighten this to run every few minutes for faster retries.
 
 ## Intentionally deferred
 
