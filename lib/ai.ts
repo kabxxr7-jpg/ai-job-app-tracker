@@ -13,7 +13,9 @@ function getClient(): GoogleGenAI {
   return globalForGemini.gemini;
 }
 
-const MODEL = "gemini-flash-latest";
+// flash-lite over flash: this is a single structured-extraction call, not a task that needs the
+// heaviest model, and the lite tier has proven more available under free-tier load in testing.
+const MODEL = "gemini-flash-lite-latest";
 
 export const SENIORITY_LEVELS = [
   "intern",
@@ -108,7 +110,13 @@ export async function analyzeJobPosting(params: {
       if (err.status === 429) {
         throw new JDAnalysisError("Gemini is rate-limited right now. Try again shortly.", "rate_limit");
       }
-      throw new JDAnalysisError(`Gemini API error: ${err.message}`, "api_error");
+      if (err.status === 503) {
+        throw new JDAnalysisError(
+          "Gemini is temporarily overloaded. Try again in a moment.",
+          "api_error"
+        );
+      }
+      throw new JDAnalysisError(`Gemini API error (${err.status}). Try again shortly.`, "api_error");
     }
     console.error("JD analysis: unexpected error", err);
     throw new JDAnalysisError("Unexpected error analyzing this posting.", "unknown");
