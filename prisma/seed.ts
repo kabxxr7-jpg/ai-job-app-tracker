@@ -32,7 +32,7 @@ async function main() {
   await prisma.profile.create({
     data: {
       resumeText:
-        "Full-stack engineer with 5 years building SaaS products. Strong in TypeScript, React, Next.js, Node, and Postgres. Shipped integrations with Stripe, Slack, and several LLM providers. Comfortable owning a feature end-to-end from schema to deploy.",
+        "Demo job seeker (fictional persona for this demo): about 3 years of frontend work with React and TypeScript, looking for a full-stack role. Comfortable with Node, Postgres and REST APIs.",
       skills: [
         "TypeScript",
         "React",
@@ -42,8 +42,6 @@ async function main() {
         "Prisma",
         "REST APIs",
         "Webhooks",
-        "LLM integration",
-        "Stripe",
       ],
     },
   });

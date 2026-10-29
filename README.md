@@ -9,7 +9,7 @@ of wide:
   returns a fit score, a rationale, and a drafted outreach note, using structured output validated
   server-side (not a prompt-and-hope wrapper).
 - **Integrations that actually fire** — status changes trigger signed, logged, automatically-retried
-  webhooks to Slack/Discord/Zapier/your own endpoint. Every delivery attempt is recorded; failed
+  webhooks to any HTTPS endpoint you configure (Slack, Discord, Zapier and Make need a payload adapter). Every delivery attempt is recorded; failed
   ones retry on a backoff schedule until they succeed or give up.
 
 Everything else — the kanban board, dashboard stats, notes, timeline — exists to make those two
@@ -29,8 +29,8 @@ Next.js App Router (Server Actions + Route Handlers)
         |-- Gemini API ----------- structured JD extraction + fit scoring
         |                          (responseJsonSchema + Zod validation)
         |
-        '-- Outgoing webhooks ---- signed POSTs to Slack/Discord/Zapier/Make/
-                                    your own endpoint, on status change
+        '-- Outgoing webhooks ---- signed POSTs to any HTTPS endpoint you
+                                    configure, on status change
 ```
 
 Every page is a Server Component reading Postgres directly via Prisma. Mutations are Server Actions
@@ -84,8 +84,8 @@ because it exists, not because the feature needs it.
 
 ## The webhook feature: signed, logged, retried
 
-Settings → Webhooks lets you point a URL (Slack/Discord incoming webhook, a Zapier/Make catch hook,
-your own endpoint) at specific status transitions (default: Interview, Offer, Rejected). On a
+Settings → Webhooks lets you point a URL (any HTTPS endpoint; Slack and Discord incoming webhooks and
+Zapier/Make catch hooks would need a small payload adapter, which this does not include) at specific status transitions (default: Interview, Offer, Rejected). On a
 matching status change, `lib/webhooks.ts` POSTs a signed JSON payload and logs every attempt —
 not just failures — to `WebhookDelivery`.
 
